@@ -1,3 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Terrarium Sequence</title>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  background: #ffffff;
+  font-family: Arial, sans-serif;
+}
+
+.section {
+  height: 700vh;
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+}
+
+#hotspots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.hotspot {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #5f564d;
+  font-size: 18px;
+  white-space: nowrap;
+  opacity: 0;
+}
+
+.line {
+  width: 120px;
+  height: 1px;
+  background: #5f564d;
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.circle {
+  width: 10px;
+  height: 10px;
+  border: 1px solid #5f564d;
+  border-radius: 50%;
+  transform: scale(0);
+}
+
+#h1 {
+  left: 60%;
+  top: 30%;
+}
+
+#h2 {
+  left: 60%;
+  top: 44%;
+}
+
+#h3 {
+  left: 60%;
+  top: 56%;
+}
+
+@media (max-width: 768px) {
+  .hotspot {
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .line {
+    width: 50px;
+  }
+
+  #h1,
+  #h2,
+  #h3 {
+    left: 52%;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<section class="section">
+  <div class="sticky">
+
+    <canvas id="c"></canvas>
+
+    <div id="hotspots">
+
+      <div class="hotspot" id="h1">
+        <div class="line"></div>
+        <div class="circle"></div>
+        <div>Bol Moss</div>
+      </div>
+
+      <div class="hotspot" id="h2">
+        <div class="line"></div>
+        <div class="circle"></div>
+        <div>Sphagnum Moss</div>
+      </div>
+
+      <div class="hotspot" id="h3">
+        <div class="line"></div>
+        <div class="circle"></div>
+        <div>Drainage Stones</div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+var canvas = document.getElementById("c");
+var ctx = canvas.getContext("2d");
+var hotspotLayer = document.getElementById("hotspots");
+
+var TOTAL = 101;
+var state = {
+  frame: 0
+};
+
+var images = new Array(TOTAL);
+var loaded = new Array(TOTAL);
+
+var targetFrame = 0;
+var lastDrawnFrame = -1;
+var hotspotsVisible = false;
+
+var canvasCssWidth = 0;
+var canvasCssHeight = 0;
+var canvasDpr = 1;
+
+for (var loadedIndex = 0; loadedIndex < TOTAL; loadedIndex++) {
+  loaded[loadedIndex] = false;
+}
+
+/*
+Creates:
+./ezgif-frame-001.png
+./ezgif-frame-002.png
+...
+./ezgif-frame-101.png
+*/
+function getFramePath(frameNumber) {
+  var paddedNumber = ("000" + frameNumber).slice(-3);
+
+  return "./ezgif-frame-" + paddedNumber + ".png";
+}
+
+function loadFrame(index) {
+  var img = new Image();
+
+  images[index] = img;
+
+  img.onload = function () {
+    loaded[index] = true;
+
+    if (index === 0 || index === targetFrame) {
+      drawFrame(targetFrame);
+    }
+  };
+
+  img.onerror = function () {
+    console.error(
+      "Could not load image: " + getFramePath(index + 1)
+    );
+  };
+
+  img.src = getFramePath(index + 1);
+}
+
+for (var imageIndex = 0; imageIndex < TOTAL; imageIndex++) {
+  loadFrame(imageIndex);
+}
+
+function resizeCanvas() {
+  var width = canvas.clientWidth || window.innerWidth;
+  var height = canvas.clientHeight || window.innerHeight;
+  var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+
+  var requiredWidth = Math.round(width * dpr);
+  var requiredHeight = Math.round(height * dpr);
+
+  if (
+    canvas.width !== requiredWidth ||
+    canvas.height !== requiredHeight
+  ) {
+    canvas.width = requiredWidth;
+    canvas.height = requiredHeight;
+  }
+
+  canvasCssWidth = width;
+  canvasCssHeight = height;
+  canvasDpr = dpr;
+
+  ctx.setTransform(
+    canvasDpr,
+    0,
+    0,
+    canvasDpr,
+    0,
+    0
+  );
+}
+
+/*
+If the requested image has not
 finished loading,
 keep displaying the last valid image instead of
 clearing the canvas and showing a blank screen.
