@@ -33,7 +33,7 @@ const hs=document.getElementById('hotspots');
 const total=101;
 const imgs=[];
 const state={frame:0};
-for(let i=1;i<=total;i++){let im=new Image();im.src=`a terrarium/ezgif-frame-${String(i).padStart(3,'0')}.png`;imgs.push(im);}
+for(let i=1;i<=total;i++){let im=new Image();im.src=`ezgif-frame-${String(i).padStart(3,'0')}.png`;imgs.push(im);}
 imgs[0].onload=draw;
 function draw(){
  c.width=innerWidth;c.height=innerHeight;
