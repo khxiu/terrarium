@@ -20,6 +20,7 @@ html,body{
 }
 
 .section{height:700vh}
+
 .sticky{
   position:sticky;
   top:0;
@@ -35,10 +36,9 @@ canvas{
   width:100%;
   height:100%;
   display:block;
-  background:#fff;
-  touch-action:pan-y;
 }
 
+/* HOTSPOTS */
 #hotspots{
   position:absolute;
   inset:0;
@@ -56,7 +56,6 @@ canvas{
   color:#5f564d;
   font-size:18px;
   opacity:0;
-  white-space:nowrap;
 }
 
 .line{
@@ -75,15 +74,10 @@ canvas{
   transform:scale(0);
 }
 
+/* positions */
 #h1{left:60%;top:30%}
 #h2{left:60%;top:44%}
 #h3{left:60%;top:56%}
-
-@media(max-width:768px){
-  .hotspot{font-size:13px;gap:8px}
-  .line{width:50px}
-  #h1,#h2,#h3{left:52%}
-}
 </style>
 </head>
 
@@ -91,6 +85,7 @@ canvas{
 
 <section class="section">
   <div class="sticky">
+
     <canvas id="c"></canvas>
 
     <div id="hotspots">
@@ -112,6 +107,7 @@ canvas{
         <div>Drainage Stones</div>
       </div>
     </div>
+
   </div>
 </section>
 
@@ -126,17 +122,18 @@ const state = { frame: 0 };
 
 const images = [];
 let currentFrame = 0;
+let lastGoodFrame = 0;   // ✅ IMPORTANT FIX
 let hotspotsVisible = false;
 
-// FIXED LINE HERE
+// LOAD IMAGES
 for(let i=1;i<=TOTAL;i++){
   const img = new Image();
-  img.src = `./ezgif-frame-${String(i).padStart(3,'0')}.png`;
+  img.src = ./ezgif-frame-${String(i).padStart(3,'0')}.png;
+  img.onload = draw; // redraw when ready
   images.push(img);
 }
 
-images[0].onload = draw;
-
+// RESIZE
 function resizeCanvas(){
   const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
   const w = window.innerWidth;
@@ -150,12 +147,20 @@ function resizeCanvas(){
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 
+// DRAW
 function draw(){
-  resizeCanvas();
-
   currentFrame = Math.round(state.frame);
-  const img = images[currentFrame];
-  if(!img || !img.complete) return;
+  let img = images[currentFrame];
+
+  // ❗ if current not ready → fallback to last good
+  if(!img || !img.complete){
+    img = images[lastGoodFrame];
+    if(!img || !img.complete) return;
+  } else {
+    lastGoodFrame = currentFrame;
+  }
+
+  resizeCanvas();
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
@@ -168,10 +173,12 @@ function draw(){
 
   ctx.drawImage(img, dx, dy, img.width*ratio, img.height*ratio);
 
+  // HOTSPOTS
   if(currentFrame === 100 && !hotspotsVisible) showHotspots();
   if(currentFrame < 100 && hotspotsVisible) hideHotspots();
 }
 
+// HOTSPOTS
 function showHotspots(){
   hotspotsVisible = true;
 
@@ -196,10 +203,12 @@ function showHotspots(){
   });
 }
 
-function hideHotspots(){
+function
+  hideHotspots(){
   hotspotsVisible = false;
 
   const hs = document.getElementById("hotspots");
+
   gsap.to(".hotspot",{opacity:0,duration:.2});
   gsap.set(".line",{scaleX:0});
   gsap.set(".circle",{scale:0});
@@ -209,6 +218,7 @@ function hideHotspots(){
   hs.style.visibility = "hidden";
 }
 
+// SCROLL
 gsap.to(state,{
   frame: TOTAL-1,
   snap: "frame",
@@ -222,9 +232,9 @@ gsap.to(state,{
   onUpdate: draw
 });
 
+// FIX
 window.addEventListener('resize', draw);
 window.addEventListener('orientationchange', ()=>setTimeout(draw,200));
-
 </script>
 
 </body>
