@@ -74,7 +74,6 @@ canvas{
   transform:scale(0);
 }
 
-/* positions */
 #h1{left:60%;top:30%}
 #h2{left:60%;top:44%}
 #h3{left:60%;top:56%}
@@ -122,18 +121,17 @@ const state = { frame: 0 };
 
 const images = [];
 let currentFrame = 0;
-let lastGoodFrame = 0;   // ✅ IMPORTANT FIX
+let lastGoodFrame = 0;
 let hotspotsVisible = false;
 
-// LOAD IMAGES
+// ✅ FIXED HERE
 for(let i=1;i<=TOTAL;i++){
   const img = new Image();
   img.src = ./ezgif-frame-${String(i).padStart(3,'0')}.png;
-  img.onload = draw; // redraw when ready
+  img.onload = draw;
   images.push(img);
 }
 
-// RESIZE
 function resizeCanvas(){
   const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
   const w = window.innerWidth;
@@ -147,12 +145,10 @@ function resizeCanvas(){
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 
-// DRAW
 function draw(){
   currentFrame = Math.round(state.frame);
   let img = images[currentFrame];
 
-  // ❗ if current not ready → fallback to last good
   if(!img || !img.complete){
     img = images[lastGoodFrame];
     if(!img || !img.complete) return;
@@ -173,12 +169,10 @@ function draw(){
 
   ctx.drawImage(img, dx, dy, img.width*ratio, img.height*ratio);
 
-  // HOTSPOTS
   if(currentFrame === 100 && !hotspotsVisible) showHotspots();
   if(currentFrame < 100 && hotspotsVisible) hideHotspots();
 }
 
-// HOTSPOTS
 function showHotspots(){
   hotspotsVisible = true;
 
@@ -203,8 +197,8 @@ function showHotspots(){
   });
 }
 
-function
-  hideHotspots(){
+// ✅ FIXED HERE
+function hideHotspots(){
   hotspotsVisible = false;
 
   const hs = document.getElementById("hotspots");
@@ -218,7 +212,6 @@ function
   hs.style.visibility = "hidden";
 }
 
-// SCROLL
 gsap.to(state,{
   frame: TOTAL-1,
   snap: "frame",
@@ -232,7 +225,6 @@ gsap.to(state,{
   onUpdate: draw
 });
 
-// FIX
 window.addEventListener('resize', draw);
 window.addEventListener('orientationchange', ()=>setTimeout(draw,200));
 </script>
