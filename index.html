@@ -127,7 +127,7 @@ let hotspotsVisible = false;
 // ✅ FIXED HERE
 for(let i=1;i<=TOTAL;i++){
   const img = new Image();
-  img.src = ./ezgif-frame-${String(i).padStart(3,'0')}.png;
+  img.src = './ezgif-frame-${String(i).padStart(3,'0')}.png';
   img.onload = draw;
   images.push(img);
 }
