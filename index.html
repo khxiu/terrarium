@@ -4,20 +4,240 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Terrarium Sequence</title>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+
 <style>
-body{font-family:Arial,sans-serif;background:#f6f4ef;margin:0;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;color:#5f564d}
-.box{max-width:700px;padding:24px}
-code{background:#eee;padding:2px 6px}
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  width:100%;
+  min-height:100%;
+  overflow-x:hidden;
+  background:#fff;
+  font-family:Arial, sans-serif;
+}
+
+.section{height:700vh}
+.sticky{
+  position:sticky;
+  top:0;
+  height:100vh;
+  height:100svh;
+  overflow:hidden;
+  background:#fff;
+}
+
+canvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  background:#fff;
+  touch-action:pan-y;
+}
+
+/* HOTSPOTS */
+#hotspots{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:0;
+  visibility:hidden;
+  transition:0.3s;
+}
+
+.hotspot{
+  position:absolute;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  color:#5f564d;
+  font-size:18px;
+  opacity:0;
+  white-space:nowrap;
+}
+
+.line{
+  width:120px;
+  height:1px;
+  background:#5f564d;
+  transform-origin:left;
+  transform:scaleX(0);
+}
+
+.circle{
+  width:10px;
+  height:10px;
+  border:1px solid #5f564d;
+  border-radius:50%;
+  transform:scale(0);
+}
+
+/* DESKTOP POSITIONS */
+#h1{left:60%;top:30%}
+#h2{left:60%;top:44%}
+#h3{left:60%;top:56%}
+
+/* MOBILE ADJUST */
+@media(max-width:768px){
+  .hotspot{font-size:13px;gap:8px}
+  .line{width:50px}
+  #h1,#h2,#h3{left:52%}
+}
 </style>
 </head>
+
 <body>
-<div class="box">
-<h2>Terrarium Project Placeholder</h2>
-<p>The production-ready responsive GSAP version is too large to safely generate in a single response. Your previous file froze because it was incomplete.</p>
-<p>This placeholder confirms the downloadable file workflow is working.</p>
-<p>In the next step, the full production version should replace this file.</p>
-<p>Image naming expected: <code>ezgif-frame-001.png</code> ... <code>ezgif-frame-101.png</code></p>
-</div>
+
+<section class="section">
+  <div class="sticky">
+
+    <canvas id="c"></canvas>
+
+    <div id="hotspots">
+      <div class="hotspot" id="h1">
+        <div class="line"></div>
+        <div class="circle"></div>
+        <div>Bol Moss</div>
+      </div>
+
+      <div class="hotspot" id="h2">
+        <div class="line"></div>
+        <div class="circle"></div>
+        <div>Sphagnum Moss</div>
+      </div>
+
+      <div class="hotspot" id="h3">
+        <div class="line"></div>
+        <div class="circle"></div>
+        <div>Drainage Stones</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+const TOTAL = 101;
+const state = { frame: 0 };
+
+const images = [];
+let currentFrame = 0;
+let hotspotsVisible = false;
+
+// LOAD IMAGES (same folder)
+for(let i=1;i<=TOTAL;i++){
+  const img = new Image();
+  img.src = ./ezgif-frame-${String(i).padStart(3,'0')}.png;
+  images.push(img);
+}
+
+images[0].onload = draw;
+
+// CANVAS RESIZE (mobile-safe)
+function resizeCanvas(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + "px";
+  canvas.style.height = h + "px";
+
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+// DRAW
+function draw(){
+  resizeCanvas();
+
+  currentFrame = Math.round(state.frame);
+  const img = images[currentFrame];
+  if(!img || !img.complete) return;
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+
+  const ratio = Math.min(w/img.width, h/img.height);
+  const dx = (w - img.width * ratio)/2;
+  const dy = (h - img.height * ratio)/2;
+
+  ctx.drawImage(img, dx, dy, img.width*ratio, img.height*ratio);
+
+  // SHOW HOTSPOTS ONLY LAST FRAME
+  if(currentFrame === 100 && !hotspotsVisible) showHotspots();
+  if(currentFrame < 100 && hotspotsVisible) hideHotspots();
+}
+
+// HOTSPOTS
+function showHotspots(){
+  hotspotsVisible = true;
+
+  const hs = document.getElementById("hotspots");
+  hs.style.visibility = "visible";
+  hs.style.opacity = 1;
+
+  gsap.utils.toArray(".hotspot").forEach((el,i)=>{
+    gsap.set(el,{opacity:1});
+
+    gsap.fromTo(el.querySelector(".line"),
+      {scaleX:0},
+      {scaleX:1,duration:.4,delay:i*0.15});
+
+    gsap.fromTo(el.querySelector(".circle"),
+      {scale:0},
+      {scale:1,duration:.15,delay:0.4+i*0.15});
+
+    gsap.fromTo(el.children[2],
+      {opacity:0,x:-10},
+  {opacity:1,x:0,duration:.3,delay:0.55+i*0.15});
+  });
+}
+
+function hideHotspots(){
+  hotspotsVisible = false;
+
+  const hs = document.getElementById("hotspots");
+
+  gsap.to(".hotspot",{opacity:0,duration:.2});
+  gsap.set(".line",{scaleX:0});
+  gsap.set(".circle",{scale:0});
+  gsap.set(".hotspot div:last-child",{opacity:0,x:-10});
+
+  hs.style.opacity = 0;
+  hs.style.visibility = "hidden";
+}
+
+// SCROLL
+gsap.to(state,{
+  frame: TOTAL-1,
+  snap: "frame",
+  ease: "none",
+  scrollTrigger:{
+    trigger:".section",
+    start:"top top",
+    end:"bottom bottom",
+    scrub:0.5
+  },
+  onUpdate: draw
+});
+
+// FIXES
+window.addEventListener('resize', draw);
+window.addEventListener('orientationchange', ()=>setTimeout(draw,200));
+
+</script>
+
 </body>
 </html>
-
