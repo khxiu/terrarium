@@ -1,68 +1,841 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Terrarium Sequence</title>
-<!-- Replace with your Adobe Fonts kit -->
-<!-- <link rel="stylesheet" href="https://use.typekit.net/XXXXXXX.css"> -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Interactive Terrarium</title>
+
 <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+
 <style>
-html,body{margin:0;background:#f6f4ef;height:100%;overflow-x:hidden;font-family:serif}
-.section{height:700vh}.sticky{position:sticky;top:0;height:100vh}
-canvas{width:100%;height:100%;display:block}
-#hotspots{position:absolute;inset:0;pointer-events:none;opacity:0;transition:.3s}
-.hotspot{position:absolute;display:flex;align-items:center;gap:12px;color:#5f564d;font-size:18px;opacity:0}
-.line{width:120px;height:1px;background:#5f564d;transform-origin:left;transform:scaleX(0)}
-.circle{width:10px;height:10px;border:1px solid #5f564d;border-radius:50%;transform:scale(0)}
-#h1{left:60%;top:30%}#h2{left:60%;top:44%}#h3{left:60%;top:56%}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html,
+body{
+
+    width:100%;
+    height:100%;
+    overflow-x:hidden;
+    background:#f6f4ef;
+    font-family:
+    "Baskerville Poster PT",
+    Georgia,
+    serif;
+
+}
+
+/* ===========================
+   Scroll Section
+=========================== */
+
+.section{
+
+    position:relative;
+
+    /* JS will update this */
+    height:900vh;
+
+}
+
+.sticky{
+
+    position:sticky;
+    top:0;
+
+    width:100%;
+    height:100vh;
+
+    overflow:hidden;
+
+    background:#f6f4ef;
+
+}
+
+/* ===========================
+   Canvas
+=========================== */
+
+canvas{
+
+    width:100%;
+    height:100%;
+
+    display:block;
+
+}
+
+/* ===========================
+   Loading Screen
+=========================== */
+
+#loader{
+
+    position:fixed;
+
+    inset:0;
+
+    z-index:9999;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:#f6f4ef;
+
+    transition:.8s;
+
+}
+
+#loader h2{
+
+    font-size:32px;
+    font-weight:400;
+    color:#5f564d;
+
+    letter-spacing:2px;
+
+}
+
+#loader p{
+
+    margin-top:18px;
+
+    color:#7b7268;
+
+    font-size:16px;
+
+}
+
+.loader-bar{
+
+    width:min(320px,80vw);
+
+    height:2px;
+
+    background:#d8d3cb;
+
+    margin-top:24px;
+
+    overflow:hidden;
+
+}
+
+.loader-progress{
+
+    width:0%;
+
+    height:100%;
+
+    background:#5f564d;
+
+}
+
+.hidden{
+
+    opacity:0;
+    pointer-events:none;
+
+}
+
+/* ===========================
+   Hotspots
+=========================== */
+
+#hotspots{
+
+    position:absolute;
+
+    inset:0;
+
+    pointer-events:none;
+
+    opacity:0;
+
+}
+
+/* individual hotspot */
+
+.hotspot{
+
+    position:absolute;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    color:#5f564d;
+
+    opacity:0;
+
+    white-space:nowrap;
+
+    font-size:clamp(12px,1.1vw,18px);
+
+}
+
+/* line */
+
+.hotspot .line{
+
+    width:clamp(60px,8vw,140px);
+
+    height:1px;
+
+    background:#5f564d;
+
+    transform-origin:left center;
+
+    transform:scaleX(0);
+
+}
+
+/* circle */
+
+.hotspot .circle{
+
+    width:10px;
+
+    height:10px;
+
+    border:1px solid #5f564d;
+
+    border-radius:50%;
+
+    transform:scale(0);
+
+}
+
+/* ===========================
+   Responsive
+=========================== */
+
+@media(max-width:1024px){
+
+.section{
+
+height:1000vh;
+
+}
+
+}
+
+@media(max-width:768px){
+
+.section{
+
+height:1200vh;
+
+}
+
+#loader h2{
+
+font-size:24px;
+
+}
+
+.hotspot{
+
+font-size:13px;
+
+gap:10px;
+
+}
+
+.hotspot .line{
+
+width:60px;
+
+}
+
+}
+
 </style>
-</head><body>
-<section class="section"><div class="sticky">
-<canvas id="c"></canvas>
+
+</head>
+
+<body>
+
+<!-- ===========================
+     Loading Screen
+=========================== -->
+
+<div id="loader">
+
+<h2>Loading Terrarium</h2>
+
+<p id="loadingText">0%</p>
+
+<div class="loader-bar">
+
+<div class="loader-progress"></div>
+
+</div>
+
+</div>
+
+<!-- ===========================
+     Scroll Section
+=========================== -->
+
+<section class="section">
+
+<div class="sticky">
+
+<canvas id="canvas"></canvas>
+
+<!-- ===========================
+     Hotspots
+=========================== -->
+
 <div id="hotspots">
-<div class="hotspot" id="h1"><div class="line"></div><div class="circle"></div><div>Bol Moss</div></div>
-<div class="hotspot" id="h2"><div class="line"></div><div class="circle"></div><div>Sphagnum Moss</div></div>
-<div class="hotspot" id="h3"><div class="line"></div><div class="circle"></div><div>Drainage Stones</div></div>
-</div></div></section>
+
+<div class="hotspot" id="hotspot1">
+
+<div class="line"></div>
+
+<div class="circle"></div>
+
+<div>Bol Moss</div>
+
+</div>
+
+<div class="hotspot" id="hotspot2">
+
+<div class="line"></div>
+
+<div class="circle"></div>
+
+<div>Sphagnum Moss</div>
+
+</div>
+
+<div class="hotspot" id="hotspot3">
+
+<div class="line"></div>
+
+<div class="circle"></div>
+
+<div>Drainage Stones</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
 <script>
+
 gsap.registerPlugin(ScrollTrigger);
-const c=document.getElementById('c'),x=c.getContext('2d');
-const hs=document.getElementById('hotspots');
-const total=101;
-const imgs=[];
-const state={frame:0};
-for(let i=1;i<=total;i++){let im=new Image();im.src=`ezgif-frame-${String(i).padStart(3,'0')}.png`;imgs.push(im);}
-imgs[0].onload=draw;
-function draw(){
- c.width=innerWidth;c.height=innerHeight;
- let im=imgs[state.frame]; if(!im)return;
- x.clearRect(0,0,c.width,c.height);
- let r=Math.min(c.width/im.width,c.height/im.height);
- let dx=(c.width-im.width*r)/2,dy=(c.height-im.height*r)/2;
- x.drawImage(im,dx,dy,im.width*r,im.height*r);
- if(state.frame===100 && hs.dataset.show!=="1"){show()}
- if(state.frame<100 && hs.dataset.show==="1"){hide()}
+
+/* ===========================
+   Canvas
+=========================== */
+
+const canvas = document.getElementById("canvas");
+
+const ctx = canvas.getContext("2d");
+
+/* image sequence */
+
+const totalFrames = 101;
+
+const images = [];
+
+const state = {
+
+frame:0
+
+};
+
+/* loader */
+
+const loader = document.getElementById("loader");
+
+const loaderText = document.getElementById("loadingText");
+
+const loaderBar = document.querySelector(".loader-progress");
+
+/* hotspots */
+
+const hotspotContainer = document.getElementById("hotspots");
+/* =====================================================
+   PART 2 - IMAGE PRELOADER + RESPONSIVE DRAWING
+===================================================== */
+
+let loadedImages = 0;
+
+/* Load all frames */
+
+for(let i = 1; i <= totalFrames; i++){
+
+    const img = new Image();
+
+    img.src = `ezgif-frame-${String(i).padStart(3,"0")}.png`;
+
+    img.onload = () => {
+
+        loadedImages++;
+
+        const percent = Math.round((loadedImages / totalFrames) * 100);
+
+        loaderText.textContent = percent + "%";
+
+        loaderBar.style.width = percent + "%";
+
+        if(loadedImages === totalFrames){
+
+            drawFrame();
+
+            loader.classList.add("hidden");
+
+            ScrollTrigger.refresh();
+
+        }
+
+    };
+
+    img.onerror = () => {
+
+        console.error("Missing:", img.src);
+
+    };
+
+    images.push(img);
+
 }
-function show(){
- hs.dataset.show="1";hs.style.opacity=1;
- gsap.utils.toArray(".hotspot").forEach((e,i)=>{
-  gsap.set(e,{opacity:1});
-  gsap.fromTo(e.querySelector(".line"),{scaleX:0},{scaleX:1,duration:.45,delay:i*.15});
-  gsap.fromTo(e.querySelector(".circle"),{scale:0},{scale:1,duration:.12,delay:.45+i*.15});
-  gsap.fromTo(e.children[2],{opacity:0,x:-10},{opacity:1,x:0,duration:.3,delay:.57+i*.15});
- });
+
+/* =====================================================
+   Responsive Canvas
+===================================================== */
+
+function resizeCanvas(){
+
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = window.innerWidth * dpr;
+
+    canvas.height = window.innerHeight * dpr;
+
+    canvas.style.width = window.innerWidth + "px";
+
+    canvas.style.height = window.innerHeight + "px";
+
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+
+    drawFrame();
+
 }
-function hide(){
- hs.dataset.show="0";
- gsap.to(".hotspot",{opacity:0,duration:.2});
- gsap.set(".line",{scaleX:0});
- gsap.set(".circle",{scale:0});
- gsap.set(".hotspot div:last-child",{opacity:0,x:-10});
- hs.style.opacity=0;
+
+/* =====================================================
+   Draw Current Frame
+===================================================== */
+
+function drawFrame(){
+
+    const img = images[state.frame];
+
+    if(!img || !img.complete) return;
+
+    const w = window.innerWidth;
+
+    const h = window.innerHeight;
+
+    ctx.clearRect(0,0,w,h);
+
+    /* -------- OPTION A --------
+       Always show the whole terrarium
+    ---------------------------- */
+
+    const scale = Math.min(
+
+        w / img.width,
+
+        h / img.height
+
+    );
+
+    const drawWidth = img.width * scale;
+
+    const drawHeight = img.height * scale;
+
+    const offsetX = (w - drawWidth) / 2;
+
+    const offsetY = (h - drawHeight) / 2;
+
+    ctx.drawImage(
+
+        img,
+
+        offsetX,
+
+        offsetY,
+
+        drawWidth,
+
+        drawHeight
+
+    );
+
+    updateHotspots(
+
+        offsetX,
+
+        offsetY,
+
+        drawWidth,
+
+        drawHeight
+
+    );
+
 }
-gsap.to(state,{frame:100,snap:"frame",ease:"none",scrollTrigger:{trigger:".section",start:"top top",end:"bottom bottom",scrub:1},onUpdate:draw});
-addEventListener('resize',draw);
-</script>
-</body></html>
+
+/* =====================================================
+   Hotspot Positioning
+===================================================== */
+
+function updateHotspots(x,y,w,h){
+
+    /* These percentages refer to the IMAGE,
+       not the browser window */
+
+    const positions = [
+
+        { id:"hotspot1", x:0.63, y:0.28 },
+
+        { id:"hotspot2", x:0.62, y:0.47 },
+
+        { id:"hotspot3", x:0.60, y:0.67 }
+
+    ];
+
+    positions.forEach(p=>{
+
+        const el=document.getElementById(p.id);
+
+        el.style.left=(x+w*p.x)+"px";
+
+        el.style.top=(y+h*p.y)+"px";
+
+    });
+
+}
+
+/* =====================================================
+   Window Resize
+===================================================== */
+
+window.addEventListener("resize",()=>{
+
+    resizeCanvas();
+
+    ScrollTrigger.refresh();
+
+});
+
+/* Initial */
+
+resizeCanvas();
+/* =====================================================
+   PART 3 - GSAP SCROLL ANIMATION
+===================================================== */
+
+let isHotspotVisible = false;
+
+/* ---------------------------------------
+   Responsive Scroll Distance
+--------------------------------------- */
+
+function getScrollDistance(){
+
+    const w = window.innerWidth;
+
+    if(w >= 1600){
+
+        return 9000;
+
+    }
+
+    if(w >= 1024){
+
+        return 7500;
+
+    }
+
+    if(w >= 768){
+
+        return 6500;
+
+    }
+
+    return 5500;
+
+}
+
+/* ---------------------------------------
+   Kill old ScrollTriggers
+--------------------------------------- */
+
+function buildScroll(){
+
+    ScrollTrigger.getAll().forEach(trigger=>trigger.kill());
+
+    gsap.to(state,{
+
+        frame:totalFrames-1,
+
+        snap:"frame",
+
+        ease:"none",
+
+        onUpdate:drawFrame,
+
+        scrollTrigger:{
+
+            trigger:".section",
+
+            start:"top top",
+
+            end:"+="+getScrollDistance(),
+
+            pin:".sticky",
+
+            scrub:0.4,
+
+            anticipatePin:1,
+
+            invalidateOnRefresh:true,
+
+            fastScrollEnd:true,
+
+            markers:false,
+
+            onUpdate:self=>{
+
+                /* last frame */
+
+                if(state.frame>=totalFrames-1){
+
+                    if(!isHotspotVisible){
+
+                        showHotspots();
+
+                    }
+
+                }
+
+                else{
+
+                    if(isHotspotVisible){
+
+                        hideHotspots();
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    });
+
+}
+
+/* ---------------------------------------
+   Refresh on Resize
+--------------------------------------- */
+
+let resizeTimer;
+
+window.addEventListener("resize",()=>{
+
+    clearTimeout(resizeTimer);
+
+    resizeTimer=setTimeout(()=>{
+
+        resizeCanvas();
+
+        buildScroll();
+
+        ScrollTrigger.refresh();
+
+    },200);
+
+});
+
+/* ---------------------------------------
+   Mobile Safari Fix
+--------------------------------------- */
+
+window.addEventListener("orientationchange",()=>{
+
+    setTimeout(()=>{
+
+        resizeCanvas();
+
+        buildScroll();
+
+        ScrollTrigger.refresh();
+
+    },300);
+
+});
+
+/* ---------------------------------------
+   Build Everything
+--------------------------------------- */
+
+window.addEventListener("load",()=>{
+
+    buildScroll();
+
+    ScrollTrigger.refresh();
+
+});
+/* =====================================================
+   PART 4 - HOTSPOTS
+===================================================== */
+
+const hotspots = gsap.utils.toArray(".hotspot");
+
+/* ---------------------------------------
+   Show
+--------------------------------------- */
+
+function showHotspots(){
+
+    isHotspotVisible = true;
+
+    hotspotContainer.style.opacity = 1;
+
+    hotspots.forEach((hotspot,index)=>{
+
+        const line = hotspot.querySelector(".line");
+        const circle = hotspot.querySelector(".circle");
+        const text = hotspot.children[2];
+
+        gsap.killTweensOf([hotspot,line,circle,text]);
+
+        gsap.set(hotspot,{
+            opacity:1
+        });
+
+        gsap.fromTo(
+            line,
+            {
+                scaleX:0
+            },
+            {
+                scaleX:1,
+                duration:.45,
+                delay:index*.15,
+                ease:"power2.out"
+            }
+        );
+
+        gsap.fromTo(
+            circle,
+            {
+                scale:0
+            },
+            {
+                scale:1,
+                duration:.18,
+                delay:.42+index*.15,
+                ease:"back.out(2)"
+            }
+        );
+
+        gsap.fromTo(
+            text,
+            {
+                opacity:0,
+                x:-12
+            },
+            {
+                opacity:1,
+                x:0,
+                duration:.3,
+                delay:.55+index*.15
+            }
+        );
+
+        gsap.to(
+            hotspot,
+            {
+                y:-3,
+                duration:2,
+                yoyo:true,
+                repeat:-1,
+                ease:"sine.inOut",
+                delay:1+index*.2
+            }
+        );
+
+    });
+
+}
+
+/* ---------------------------------------
+   Hide
+--------------------------------------- */
+
+function hideHotspots(){
+
+    isHotspotVisible = false;
+
+    hotspots.forEach((hotspot)=>{
+
+        const line = hotspot.querySelector(".line");
+        const circle = hotspot.querySelector(".circle");
+        const text = hotspot.children[2];
+
+        gsap.killTweensOf(hotspot);
+
+        gsap.set(line,{
+            scaleX:0
+        });
+
+        gsap.set(circle,{
+            scale:0
+        });
+
+        gsap.set(text,{
+            opacity:0,
+            x:-12
+        });
+
+        gsap.set(hotspot,{
+            opacity:0,
+            y:0
+        });
+
+    });
+
+    hotspotContainer.style.opacity = 0;
+
+}
+
+/* ---------------------------------------
+   Draw first frame
+--------------------------------------- */
+
+drawFrame();
