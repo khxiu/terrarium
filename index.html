@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Terrarium Sequence</title>
+<!-- Replace with your Adobe Fonts kit -->
+<!-- <link rel="stylesheet" href="https://use.typekit.net/XXXXXXX.css"> -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+<style>
+html,body{margin:0;background:#f6f4ef;height:100%;overflow-x:hidden;font-family:serif}
+.section{height:700vh}.sticky{position:sticky;top:0;height:100vh}
+canvas{width:100%;height:100%;display:block}
+#hotspots{position:absolute;inset:0;pointer-events:none;opacity:0;transition:.3s}
+.hotspot{position:absolute;display:flex;align-items:center;gap:12px;color:#5f564d;font-size:18px;opacity:0}
+.line{width:120px;height:1px;background:#5f564d;transform-origin:left;transform:scaleX(0)}
+.circle{width:10px;height:10px;border:1px solid #5f564d;border-radius:50%;transform:scale(0)}
+#h1{left:60%;top:30%}#h2{left:60%;top:44%}#h3{left:60%;top:56%}
+</style>
+</head><body>
+<section class="section"><div class="sticky">
+<canvas id="c"></canvas>
+<div id="hotspots">
+<div class="hotspot" id="h1"><div class="line"></div><div class="circle"></div><div>Bol Moss</div></div>
+<div class="hotspot" id="h2"><div class="line"></div><div class="circle"></div><div>Sphagnum Moss</div></div>
+<div class="hotspot" id="h3"><div class="line"></div><div class="circle"></div><div>Drainage Stones</div></div>
+</div></div></section>
+<script>
+gsap.registerPlugin(ScrollTrigger);
+const c=document.getElementById('c'),x=c.getContext('2d');
+const hs=document.getElementById('hotspots');
+const total=101;
+const imgs=[];
+const state={frame:0};
+for(let i=1;i<=total;i++){let im=new Image();im.src=`a terrarium/ezgif-frame-${String(i).padStart(3,'0')}.png`;imgs.push(im);}
+imgs[0].onload=draw;
+function draw(){
+ c.width=innerWidth;c.height=innerHeight;
+ let im=imgs[state.frame]; if(!im)return;
+ x.clearRect(0,0,c.width,c.height);
+ let r=Math.min(c.width/im.width,c.height/im.height);
+ let dx=(c.width-im.width*r)/2,dy=(c.height-im.height*r)/2;
+ x.drawImage(im,dx,dy,im.width*r,im.height*r);
+ if(state.frame===100 && hs.dataset.show!=="1"){show()}
+ if(state.frame<100 && hs.dataset.show==="1"){hide()}
+}
+function show(){
+ hs.dataset.show="1";hs.style.opacity=1;
+ gsap.utils.toArray(".hotspot").forEach((e,i)=>{
+  gsap.set(e,{opacity:1});
+  gsap.fromTo(e.querySelector(".line"),{scaleX:0},{scaleX:1,duration:.45,delay:i*.15});
+  gsap.fromTo(e.querySelector(".circle"),{scale:0},{scale:1,duration:.12,delay:.45+i*.15});
+  gsap.fromTo(e.children[2],{opacity:0,x:-10},{opacity:1,x:0,duration:.3,delay:.57+i*.15});
+ });
+}
+function hide(){
+ hs.dataset.show="0";
+ gsap.to(".hotspot",{opacity:0,duration:.2});
+ gsap.set(".line",{scaleX:0});
+ gsap.set(".circle",{scale:0});
+ gsap.set(".hotspot div:last-child",{opacity:0,x:-10});
+ hs.style.opacity=0;
+}
+gsap.to(state,{frame:100,snap:"frame",ease:"none",scrollTrigger:{trigger:".section",start:"top top",end:"bottom bottom",scrub:1},onUpdate:draw});
+addEventListener('resize',draw);
+</script>
+</body></html>
