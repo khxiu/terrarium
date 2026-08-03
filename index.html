@@ -1,41 +1,43 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Terrarium Sequence</title>
-  <!-- GSAP and ScrollTrigger -->
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    /* ----------------
+    Orientation Changes
+    ---------------- */
+    window.addEventListener("orientationchange", () => {
+      setTimeout(() => {
+        lastWidth = window.innerWidth; // Reset width cache
+        dpr = window.innerWidth < 768 ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+        updateViewport();
+        drawFrame(state.frame);
+        ScrollTrigger.refresh();
+      }, 300);
+    });
+    /* ----------------
+    Initial Render Setup
+    ---------------- */
+    function init() {
+      updateViewport();
+      drawFrame(0);
+      requestAnimationFrame(() => {
+        ScrollTrigger.refresh();
+      });
     }
-    html,
-    body {
-      width: 100%;
-      /* FIX: Use min-height instead of height: 100% on html/body. 
-         height: 100% prevents natural document scrolling on mobile 
-         and breaks ScrollTrigger's scroll event detection. */
-      min-height: 100%;
-      overflow-x: hidden;
-      background: #fff;
-      font-family: Arial, sans-serif;
-      -webkit-font-smoothing: antialiased;
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
     }
-    body {
-      position: relative;
-    }
-    .section {
-      position: relative;
-      /* Scroll height for the sequence */
-      height: 700vh;
-      background: #fff;
-    }
-    .sticky {
-      /* FIX: Changed from position: sticky to position: relative.
-         We will let GSAP ScrollTrigger handle the pinning dynamically,
-         bypassing rendering and viewport locks on mobile. */
+    /* Prevent browser dragging default behaviors */
+    document.addEventListener("dragstart", function (e) {
+      e.preventDefault();
+    });
+    /* Tab suspension and performance visibility management */
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) {
+        gsap.ticker.sleep();
+      } else {
+        gsap.ticker.wake();
+        drawFrame(state.frame);
+      }
+    });
+  </script>
+</body>
+</html>
