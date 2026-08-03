@@ -1,517 +1,880 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1,viewport-fit=cover">
+
 <title>Terrarium Sequence</title>
 
 <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
 
 <style>
-* {
-  box-sizing: border-box;
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
 }
 
 html,
-body {
-  margin: 0;
-  width: 100%;
-  min-height: 100%;
-  overflow-x: hidden;
-  background: #ffffff;
-  font-family: Arial, sans-serif;
+body{
+width:100%;
+height:100%;
+overflow-x:hidden;
+background:#fff;
+font-family:Arial,sans-serif;
+-webkit-font-smoothing:antialiased;
 }
 
-.section {
-  height: 700vh;
+body{
+position:relative;
 }
 
-.sticky {
-  position: sticky;
-  top: 0;
-  width: 100%;
-  height: 100vh;
-  height: 100svh;
-  overflow: hidden;
-  background: #ffffff;
+.section{
+
+position:relative;
+
+height:700vh;
+
+background:#fff;
+
 }
 
-canvas {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  background: #ffffff;
+.sticky{
+
+position:sticky;
+
+top:0;
+
+width:100%;
+
+height:100dvh;
+
+overflow:hidden;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+background:#fff;
+
 }
 
-#hotspots {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
+canvas{
+
+position:absolute;
+
+left:0;
+top:0;
+
+width:100%;
+height:100%;
+
+display:block;
+
+background:#fff;
+
 }
 
-.hotspot {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #5f564d;
-  font-size: 18px;
-  white-space: nowrap;
-  opacity: 0;
+/* ---------------- Loading ---------------- */
+
+#loading{
+
+position:absolute;
+
+left:50%;
+top:50%;
+
+transform:translate(-50%,-50%);
+
+font-size:18px;
+
+letter-spacing:.08em;
+
+color:#777;
+
+z-index:100;
+
+transition:.3s;
+
 }
 
-.line {
-  width: 120px;
-  height: 1px;
-  background: #5f564d;
-  transform: scaleX(0);
-  transform-origin: left center;
+#loading.hide{
+
+opacity:0;
+
+pointer-events:none;
+
 }
 
-.circle {
-  width: 10px;
-  height: 10px;
-  border: 1px solid #5f564d;
-  border-radius: 50%;
-  transform: scale(0);
+/* ---------------- Hotspots ---------------- */
+
+#hotspots{
+
+position:absolute;
+
+inset:0;
+
+pointer-events:none;
+
+opacity:0;
+
+visibility:hidden;
+
+z-index:5;
+
 }
 
-#h1 {
-  left: 60%;
-  top: 30%;
+.hotspot{
+
+position:absolute;
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+color:#5f564d;
+
+font-size:18px;
+
+white-space:nowrap;
+
+opacity:0;
+
 }
 
-#h2 {
-  left: 60%;
-  top: 44%;
+.line{
+
+width:120px;
+
+height:1px;
+
+background:#5f564d;
+
+transform-origin:left center;
+
+transform:scaleX(0);
+
 }
 
-#h3 {
-  left: 60%;
-  top: 56%;
+.circle{
+
+width:10px;
+
+height:10px;
+
+border-radius:50%;
+
+border:1px solid #5f564d;
+
+transform:scale(0);
+
 }
 
-@media (max-width: 768px) {
-  .hotspot {
-    gap: 8px;
-    font-size: 13px;
-  }
+#h1{
 
-  .line {
-    width: 50px;
-  }
+left:60%;
 
-  #h1,
-  #h2,
-  #h3 {
-    left: 52%;
-  }
+top:30%;
+
 }
+
+#h2{
+
+left:60%;
+
+top:44%;
+
+}
+
+#h3{
+
+left:60%;
+
+top:57%;
+
+}
+
+/* ---------------- Tablet ---------------- */
+
+@media(max-width:991px){
+
+.hotspot{
+
+font-size:15px;
+
+gap:10px;
+
+}
+
+.line{
+
+width:70px;
+
+}
+
+#h1,
+#h2,
+#h3{
+
+left:56%;
+
+}
+
+}
+
+/* ---------------- Phone ---------------- */
+
+@media(max-width:768px){
+
+.hotspot{
+
+font-size:12px;
+
+gap:8px;
+
+}
+
+.line{
+
+width:45px;
+
+}
+
+.circle{
+
+width:8px;
+
+height:8px;
+
+}
+
+#h1{
+
+left:51%;
+
+top:34%;
+
+}
+
+#h2{
+
+left:51%;
+
+top:48%;
+
+}
+
+#h3{
+
+left:51%;
+
+top:60%;
+
+}
+
+}
+
 </style>
+
 </head>
 
 <body>
 
 <section class="section">
-  <div class="sticky">
 
-    <canvas id="c"></canvas>
+<div class="sticky">
 
-    <div id="hotspots">
+<div id="loading">
 
-      <div class="hotspot" id="h1">
-        <div class="line"></div>
-        <div class="circle"></div>
-        <div>Bol Moss</div>
-      </div>
+Loading 0%
 
-      <div class="hotspot" id="h2">
-        <div class="line"></div>
-        <div class="circle"></div>
-        <div>Sphagnum Moss</div>
-      </div>
+</div>
 
-      <div class="hotspot" id="h3">
-        <div class="line"></div>
-        <div class="circle"></div>
-        <div>Drainage Stones</div>
-      </div>
+<canvas id="sequence"></canvas>
 
-    </div>
+<div id="hotspots">
 
-  </div>
+<div class="hotspot" id="h1">
+
+<div class="line"></div>
+
+<div class="circle"></div>
+
+<div>Bol Moss</div>
+
+</div>
+
+<div class="hotspot" id="h2">
+
+<div class="line"></div>
+
+<div class="circle"></div>
+
+<div>Sphagnum Moss</div>
+
+</div>
+
+<div class="hotspot" id="h3">
+
+<div class="line"></div>
+
+<div class="circle"></div>
+
+<div>Drainage Stones</div>
+
+</div>
+
+</div>
+
+</div>
+
 </section>
 
 <script>
+
 gsap.registerPlugin(ScrollTrigger);
 
-var canvas = document.getElementById("c");
-var ctx = canvas.getContext("2d");
-var hotspotLayer = document.getElementById("hotspots");
+const canvas=document.getElementById("sequence");
 
-var TOTAL = 101;
-var state = {
-  frame: 0
+const ctx=canvas.getContext("2d");
+
+const loading=document.getElementById("loading");
+
+const hotspotLayer=document.getElementById("hotspots");
+
+const TOTAL=101;
+
+const images=[];
+
+const loaded=[];
+
+let loadedCount=0;
+
+let currentFrame=0;
+
+let renderedFrame=-1;
+
+let hotspotsVisible=false;
+
+/* ----------------
+Viewport
+---------------- */
+
+let viewWidth=window.innerWidth;
+
+let viewHeight=window.innerHeight;
+
+let dpr=Math.min(window.devicePixelRatio||1,2);
+
+function updateViewport(){
+
+viewWidth=window.innerWidth;
+
+viewHeight=window.innerHeight;
+
+canvas.width=viewWidth*dpr;
+
+canvas.height=viewHeight*dpr;
+
+canvas.style.width=viewWidth+"px";
+
+canvas.style.height=viewHeight+"px";
+
+ctx.setTransform(dpr,0,0,dpr,0,0);
+
+}
+
+updateViewport();
+
+/* ----------------
+Image Path
+---------------- */
+
+function frameURL(i){
+
+return "./ezgif-frame-"+String(i).padStart(3,"0")+".png";
+
+}
+/* ----------------
+Image Preloader
+---------------- */
+
+function updateLoading(){
+
+const percent=Math.round((loadedCount/TOTAL)*100);
+
+loading.textContent="Loading "+percent+"%";
+
+if(loadedCount===TOTAL){
+
+loading.classList.add("hide");
+
+}
+
+}
+
+function preloadImages(){
+
+for(let i=1;i<=TOTAL;i++){
+
+const img=new Image();
+
+img.onload=function(){
+
+loaded[i-1]=true;
+
+loadedCount++;
+
+updateLoading();
+
+/* draw first frame immediately */
+
+if(i===1){
+
+drawFrame(0);
+
+}
+
 };
 
-var images = new Array(TOTAL);
-var loaded = new Array(TOTAL);
+img.onerror=function(){
 
-var targetFrame = 0;
-var lastDrawnFrame = -1;
-var hotspotsVisible = false;
+console.warn("Missing:",frameURL(i));
 
-var canvasCssWidth = 0;
-var canvasCssHeight = 0;
-var canvasDpr = 1;
+loaded[i-1]=false;
 
-for (var loadedIndex = 0; loadedIndex < TOTAL; loadedIndex++) {
-  loaded[loadedIndex] = false;
+loadedCount++;
+
+updateLoading();
+
+};
+
+img.src=frameURL(i);
+
+images.push(img);
+
 }
+
+}
+
+preloadImages();
+
+/* ----------------
+Find nearest loaded frame
+---------------- */
+
+function nearestFrame(index){
+
+if(loaded[index]) return index;
+
+/* search backwards first */
+
+for(let i=index;i>=0;i--){
+
+if(loaded[i]) return i;
+
+}
+
+/* then forwards */
+
+for(let i=index;i<TOTAL;i++){
+
+if(loaded[i]) return i;
+
+}
+
+return -1;
+
+}
+
+/* ----------------
+Draw Frame
+---------------- */
+
+function drawFrame(frame){
+
+frame=Math.round(frame);
+
+frame=Math.max(0,Math.min(frame,TOTAL-1));
+
+const index=nearestFrame(frame);
+
+if(index===-1) return;
+
+const img=images[index];
+
+if(!img.complete) return;
+
+ctx.clearRect(0,0,viewWidth,viewHeight);
+
+/* ---------- */
+
+/* COVER instead of CONTAIN
+
+This fills the screen better on
+desktop & mobile.
+
+*/
+
+const scale=Math.max(
+
+viewWidth/img.naturalWidth,
+
+viewHeight/img.naturalHeight
+
+);
+
+const drawWidth=img.naturalWidth*scale;
+
+const drawHeight=img.naturalHeight*scale;
+
+/* ---------- */
 
 /*
-Creates:
-./ezgif-frame-001.png
-./ezgif-frame-002.png
-...
-./ezgif-frame-101.png
+
+Vertical offset.
+
+Adjust ONLY this value later
+if you want the terrarium
+slightly higher/lower.
+
 */
-function getFramePath(frameNumber) {
-  var paddedNumber = ("000" + frameNumber).slice(-3);
 
-  return "./ezgif-frame-" + paddedNumber + ".png";
+const offsetY=
+
+window.innerWidth<768
+
+?40
+
+:20;
+
+const drawX=(viewWidth-drawWidth)/2;
+
+const drawY=((viewHeight-drawHeight)/2)+offsetY;
+
+/* ---------- */
+
+ctx.drawImage(
+
+img,
+
+drawX,
+
+drawY,
+
+drawWidth,
+
+drawHeight
+
+);
+
+renderedFrame=index;
+
+/* ---------- */
+
+if(frame===TOTAL-1){
+
+showHotspots();
+
+}else{
+
+hideHotspots();
+
 }
 
-function loadFrame(index) {
-  var img = new Image();
-
-  images[index] = img;
-
-  img.onload = function () {
-    loaded[index] = true;
-
-    if (index === 0 || index === targetFrame) {
-      drawFrame(targetFrame);
-    }
-  };
-
-  img.onerror = function () {
-    console.error(
-      "Could not load image: " + getFramePath(index + 1)
-    );
-  };
-
-  img.src = getFramePath(index + 1);
 }
 
-for (var imageIndex = 0; imageIndex < TOTAL; imageIndex++) {
-  loadFrame(imageIndex);
-}
+/* ----------------
+Animation State
+---------------- */
 
-function resizeCanvas() {
-  var width = canvas.clientWidth || window.innerWidth;
-  var height = canvas.clientHeight || window.innerHeight;
-  var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+const state={
 
-  var requiredWidth = Math.round(width * dpr);
-  var requiredHeight = Math.round(height * dpr);
+frame:0
 
-  if (
-    canvas.width !== requiredWidth ||
-    canvas.height !== requiredHeight
-  ) {
-    canvas.width = requiredWidth;
-    canvas.height = requiredHeight;
-  }
+};
+/* ----------------
+Hotspots
+---------------- */
 
-  canvasCssWidth = width;
-  canvasCssHeight = height;
-  canvasDpr = dpr;
+function showHotspots(){
 
-  ctx.setTransform(
-    canvasDpr,
-    0,
-    0,
-    canvasDpr,
-    0,
-    0
-  );
-}
+if(hotspotsVisible) return;
 
-/*
-If the requested image has not
-finished loading,
-keep displaying the last valid image instead of
-clearing the canvas and showing a blank screen.
-*/
-function getAvailableFrame(requestedFrame) {
-  if (loaded[requestedFrame]) {
-    return requestedFrame;
-  }
+hotspotsVisible=true;
 
-  if (
-    lastDrawnFrame >= 0 &&
-    loaded[lastDrawnFrame]
-  ) {
-    return lastDrawnFrame;
-  }
+hotspotLayer.style.visibility="visible";
+hotspotLayer.style.opacity="1";
 
-  for (var distance = 1; distance < TOTAL; distance++) {
-    var lowerFrame = requestedFrame - distance;
-    var upperFrame = requestedFrame + distance;
+const items=document.querySelectorAll(".hotspot");
 
-    if (
-      lowerFrame >= 0 &&
-      loaded[lowerFrame]
-    ) {
-      return lowerFrame;
-    }
+items.forEach((item,index)=>{
 
-    if (
-      upperFrame < TOTAL &&
-      loaded[upperFrame]
-    ) {
-      return upperFrame;
-    }
-  }
+const line=item.querySelector(".line");
+const circle=item.querySelector(".circle");
+const text=item.children[2];
 
-  return -1;
-}
-
-function drawFrame(frameNumber) {
-  targetFrame = Math.round(frameNumber);
-
-  if (targetFrame < 0) {
-    targetFrame = 0;
-  }
-
-  if (targetFrame > TOTAL - 1) {
-    targetFrame = TOTAL - 1;
-  }
-
-  var availableFrame = getAvailableFrame(targetFrame);
-
-  if (availableFrame === -1) {
-    return;
-  }
-
-  var img = images[availableFrame];
-
-  if (
-    !img ||
-    !img.naturalWidth ||
-    !img.naturalHeight
-  ) {
-    return;
-  }
-
-  resizeCanvas();
-
-  ctx.clearRect(
-    0,
-    0,
-    canvasCssWidth,
-    canvasCssHeight
-  );
-
-  var scale = Math.min(
-    canvasCssWidth / img.naturalWidth,
-    canvasCssHeight / img.naturalHeight
-  );
-
-  var drawWidth = img.naturalWidth * scale;
-  var drawHeight = img.naturalHeight * scale;
-
-  var drawX =
-    (canvasCssWidth - drawWidth) / 2;
-
-  var drawY =
-    (canvasCssHeight - drawHeight) / 2;
-
-  ctx.drawImage(
-    img,
-    drawX,
-    drawY,
-    drawWidth,
-    drawHeight
-  );
-
-  lastDrawnFrame = availableFrame;
-
-  /*
-  Hotspots appear only when the scroll reaches
-  ezgif-frame-101.png.
-  */
-  if (
-    targetFrame === TOTAL - 1 &&
-    loaded[TOTAL - 1]
-  ) {
-    showHotspots();
-  } else {
-    hideHotspots();
-  }
-}
-
-function showHotspots() {
-  if (hotspotsVisible) {
-    return;
-  }
-
-  hotspotsVisible = true;
-
-  hotspotLayer.style.visibility = "visible";
-  hotspotLayer.style.opacity = "1";
-
-  var hotspotElements =
-    document.querySelectorAll(".hotspot");
-
-  for (
-    var i = 0;
-    i < hotspotElements.length;
-    i++
-  ) {
-    var element = hotspotElements[i];
-    var delay = i * 0.15;
-
-    gsap.set(element, {
-      opacity: 1
-    });
-
-    gsap.fromTo(
-      element.querySelector(".line"),
-      {
-        scaleX: 0
-      },
-      {
-        scaleX: 1,
-        duration: 0.4,
-        delay: delay
-      }
-    );
-
-    gsap.fromTo(
-      element.querySelector(".circle"),
-      {
-        scale: 0
-      },
-      {
-        scale: 1,
-        duration: 0.15,
-        delay: 0.4 + delay
-      }
-    );
-
-    gsap.fromTo(
-      element.children[2],
-      {
-        opacity: 0,
-        x: -10
-      },
-      {
-        opacity: 1,
-        x: 0,
-        duration: 0.3,
-        delay: 0.55 + delay
-      }
-    );
-  }
-}
-
-function hideHotspots() {
-  if (!hotspotsVisible) {
-    return;
-  }
-
-  hotspotsVisible = false;
-
-  gsap.killTweensOf(".hotspot");
-  gsap.killTweensOf(".line");
-  gsap.killTweensOf(".circle");
-  gsap.killTweensOf(
-    ".hotspot div:last-child"
-  );
-
-  gsap.set(".hotspot", {
-    opacity: 0
-  });
-
-  gsap.set(".line", {
-    scaleX: 0
-  });
-
-  gsap.set(".circle", {
-    scale: 0
-  });
-
-  gsap.set(
-    ".hotspot div:last-child",
-    {
-      opacity: 0,
-      x: -10
-    }
-  );
-
-  hotspotLayer.style.opacity = "0";
-  hotspotLayer.style.visibility = "hidden";
-}
-
-gsap.to(state, {
-  frame: TOTAL - 1,
-  ease: "none",
-
-  snap: {
-    frame: 1
-  },
-
-  onUpdate: function () {
-    drawFrame(state.frame);
-  },
-
-  scrollTrigger: {
-    trigger: ".section",
-    start: "top top",
-    end: "bottom bottom",
-    scrub: 0.5,
-    invalidateOnRefresh: true
-  }
+gsap.set(item,{
+opacity:1
 });
 
-var resizeTimer;
+gsap.fromTo(
+line,
+{
+scaleX:0
+},
+{
+scaleX:1,
+duration:.45,
+ease:"power2.out",
+delay:index*.15
+});
 
-window.addEventListener(
-  "resize",
-  function () {
-    clearTimeout(resizeTimer);
+gsap.fromTo(
+circle,
+{
+scale:0
+},
+{
+scale:1,
+duration:.18,
+ease:"back.out(2)",
+delay:.4+(index*.15)
+});
 
-    resizeTimer = setTimeout(
-      function () {
-        resizeCanvas();
-        drawFrame(targetFrame);
-      },
-      100
-    );
-  }
+gsap.fromTo(
+text,
+{
+opacity:0,
+x:-12
+},
+{
+opacity:1,
+x:0,
+duration:.3,
+ease:"power2.out",
+delay:.55+(index*.15)
+});
+
+});
+
+}
+
+function hideHotspots(){
+
+if(!hotspotsVisible) return;
+
+hotspotsVisible=false;
+
+gsap.killTweensOf(".hotspot");
+gsap.killTweensOf(".line");
+gsap.killTweensOf(".circle");
+gsap.killTweensOf(".hotspot div:last-child");
+
+gsap.set(".hotspot",{
+opacity:0
+});
+
+gsap.set(".line",{
+scaleX:0
+});
+
+gsap.set(".circle",{
+scale:0
+});
+
+gsap.set(".hotspot div:last-child",{
+opacity:0,
+x:-12
+});
+
+hotspotLayer.style.opacity="0";
+hotspotLayer.style.visibility="hidden";
+
+}
+
+/* ----------------
+GSAP Sequence
+---------------- */
+
+gsap.to(state,{
+
+frame:TOTAL-1,
+
+ease:"none",
+
+snap:{
+frame:1
+},
+
+onUpdate:function(){
+
+drawFrame(state.frame);
+
+},
+
+scrollTrigger:{
+
+trigger:".section",
+
+start:"top top",
+
+end:"bottom bottom",
+
+scrub:.35,
+
+anticipatePin:1,
+
+invalidateOnRefresh:true,
+
+fastScrollEnd:true
+
+}
+
+});
+
+/* ----------------
+Resize
+---------------- */
+
+let resizeTimer;
+
+window.addEventListener("resize",()=>{
+
+clearTimeout(resizeTimer);
+
+resizeTimer=setTimeout(()=>{
+
+dpr=Math.min(window.devicePixelRatio||1,2);
+
+updateViewport();
+
+drawFrame(state.frame);
+
+ScrollTrigger.refresh();
+
+},150);
+
+});
+
+/* ----------------
+Orientation
+---------------- */
+
+window.addEventListener("orientationchange",()=>{
+
+setTimeout(()=>{
+
+dpr=Math.min(window.devicePixelRatio||1,2);
+
+updateViewport();
+
+drawFrame(state.frame);
+
+ScrollTrigger.refresh();
+
+},300);
+
+});
+/* ----------------
+Initial Render
+---------------- */
+
+function init(){
+
+// Make sure the canvas size is correct
+updateViewport();
+
+// Draw the first frame if it's available
+drawFrame(0);
+
+// Force ScrollTrigger to calculate after layout
+requestAnimationFrame(()=>{
+ScrollTrigger.refresh();
+});
+
+}
+
+if(document.readyState==="loading"){
+
+document.addEventListener("DOMContentLoaded",init);
+
+}else{
+
+init();
+
+}
+
+/* ----------------
+Prevent browser image dragging
+---------------- */
+
+document.addEventListener("dragstart",function(e){
+
+e.preventDefault();
+
+});
+
+/* ----------------
+Pause rendering when page hidden
+---------------- */
+
+document.addEventListener("visibilitychange",function(){
+
+if(document.hidden){
+
+gsap.ticker.sleep();
+
+}else{
+
+gsap.ticker.wake();
+
+drawFrame(state.frame);
+
+}
+
+});
+
+/* ----------------
+Optional Debug
+(Set to true if needed)
+---------------- */
+
+const DEBUG=false;
+
+if(DEBUG){
+
+ScrollTrigger.addEventListener("refresh",()=>{
+
+console.log(
+"Viewport:",
+viewWidth,
+viewHeight,
+"Frame:",
+Math.round(state.frame)
 );
 
-window.addEventListener(
-  "orientationchange",
-  function () {
-    setTimeout(
-      function () {
-        resizeCanvas();
-      drawFrame(targetFrame);
-        ScrollTrigger.refresh();
-      },
-      250
-    );
-  }
-);
+});
+
+}
+
+/* ----------------
+End
+---------------- */
+
 </script>
 
 </body>
+
 </html>
