@@ -483,9 +483,37 @@ function loadMobileFrames(){
 
 for(let i=1;i<=TOTAL;i++){
 
-images[i-1]=new Image();
+const img=new Image();
 
-images[i-1].src=frameURL(i);
+img.onload=function(){
+
+loaded[i-1]=true;
+
+loadedCount++;
+
+updateLoading();
+
+if(i===1){
+
+drawFrame(0);
+
+}
+
+};
+
+img.onerror=function(){
+
+loaded[i-1]=false;
+
+loadedCount++;
+
+updateLoading();
+
+};
+
+img.src=frameURL(i);
+
+images[i-1]=img;
 
 }
 
@@ -788,7 +816,7 @@ clearTimeout(resizeTimer);
 
 resizeTimer=setTimeout(()=>{
 
-let dpr=window.innerWidth<768 ? 1 : 2;
+dpr = window.innerWidth < 768 ? 1 : 2;
 
 updateViewport();
 
@@ -808,7 +836,7 @@ window.addEventListener("orientationchange",()=>{
 
 setTimeout(()=>{
 
-let dpr=window.innerWidth<768 ? 1 : 2;
+dpr = window.innerWidth < 768 ? 1 : 2;
 
 updateViewport();
 
