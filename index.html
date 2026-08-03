@@ -470,8 +470,26 @@ images.push(img);
 
 }
 
+if(window.innerWidth < 768){
+
+loadMobileFrames();
+
+}else{
+
 preloadImages();
 
+}
+function loadMobileFrames(){
+
+for(let i=1;i<=TOTAL;i++){
+
+images[i-1]=new Image();
+
+images[i-1].src=frameURL(i);
+
+}
+
+}
 /* ----------------
 Find nearest loaded frame
 ---------------- */
@@ -722,7 +740,13 @@ frame:1
 
 onUpdate:function(){
 
-drawFrame(state.frame);
+let frame=Math.round(state.frame);
+
+if(frame!==renderedFrame){
+
+drawFrame(frame);
+
+}
 
 },
 
@@ -734,7 +758,7 @@ start:"top top",
 
 end:"bottom bottom",
 
-scrub:true,
+scrub:0.5,
 
 pin:false,
 
@@ -764,7 +788,7 @@ clearTimeout(resizeTimer);
 
 resizeTimer=setTimeout(()=>{
 
-dpr=Math.min(window.devicePixelRatio||1,2);
+let dpr=window.innerWidth<768 ? 1 : 2;
 
 updateViewport();
 
@@ -784,7 +808,7 @@ window.addEventListener("orientationchange",()=>{
 
 setTimeout(()=>{
 
-dpr=Math.min(window.devicePixelRatio||1,2);
+let dpr=window.innerWidth<768 ? 1 : 2;
 
 updateViewport();
 
