@@ -1,3 +1,407 @@
+   <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Terrarium Sequence</title>
+  <!-- GSAP and ScrollTrigger -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html,
+    body {
+      width: 100%;
+      /* FIX: Use min-height instead of height: 100% on html/body. 
+         height: 100% prevents natural document scrolling on mobile 
+         and breaks ScrollTrigger's scroll event detection. */
+      min-height: 100%;
+      overflow-x: hidden;
+      background: #fff;
+      font-family: Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      position: relative;
+    }
+    .section {
+      position: relative;
+      /* Scroll height for the sequence */
+      height: 700vh;
+      background: #fff;
+    }
+    .sticky {
+      /* FIX: Changed from position: sticky to position: relative.
+         We will let GSAP ScrollTrigger handle the pinning dynamically,
+         bypassing rendering and viewport locks on mobile. */
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      height: 100svh;
+      overflow: hidden;
+      background: #fff;
+    }
+    canvas {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #fff;
+      
+      /* GPU Acceleration to ensure smooth frame updates and prevent flickering */
+      will-change: transform;
+      transform: translate3d(0, 0, 0);
+      -webkit-transform: translate3d(0, 0, 0);
+    }
+    /* ---------------- Loading ---------------- */
+    #loading {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 18px;
+      letter-spacing: .08em;
+      color: #777;
+      z-index: 100;
+      transition: opacity .3s;
+    }
+     #loading.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    /* ---------------- Hotspots ---------------- */
+    #hotspots {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      z-index: 5;
+    }
+    .hotspot {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #5f564d;
+      font-size: 18px;
+      white-space: nowrap;
+      opacity: 0;
+    }
+    .line {
+      width: 120px;
+      height: 1px;
+      background: #5f564d;
+      transform-origin: left center;
+      transform: scaleX(0);
+    }
+    .circle {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1px solid #5f564d;
+      transform: scale(0);
+    }
+     #h1 {
+      left: 60%;
+      top: 30%;
+    }
+    #h2 {
+      left: 60%;
+      top: 44%;
+    }
+    #h3 {
+      left: 60%;
+      top: 57%;
+    }
+    /* ---------------- Tablet ---------------- */
+    @media(max-width: 991px) {
+      .hotspot {
+        font-size: 15px;
+        gap: 10px;
+      }
+      .line {
+        width: 70px;
+      }
+      #h1,
+      #h2,
+      #h3 {
+        left: 56%;
+      }
+    }
+     /* ---------------- Phone ---------------- */
+    @media(max-width: 768px) {
+      .hotspot {
+        font-size: 12px;
+        gap: 8px;
+      }
+      .line {
+        width: 45px;
+      }
+      .circle {
+        width: 8px;
+        height: 8px;
+      }
+      #h1 {
+        left: 51%;
+        top: 34%;
+      }
+      #h2 {
+        left: 51%;
+        top: 48%;
+      }
+      #h3 {
+        left: 51%;
+        top: 60%;
+      }
+    }
+     </style>
+</head>
+<body>
+  <section class="section">
+    <div class="sticky">
+      <div id="loading">Loading 0%</div>
+      <canvas id="sequence"></canvas>
+      <div id="hotspots">
+        <div class="hotspot" id="h1">
+          <div class="line"></div>
+          <div class="circle"></div>
+          <div>Bol Moss</div>
+        </div>
+        <div class="hotspot" id="h2">
+          <div class="line"></div>
+          <div class="circle"></div>
+          <div>Sphagnum Moss</div>
+        </div>
+        <div class="hotspot" id="h3">
+          <div class="line"></div>
+          <div class="circle"></div>
+          <div>Drainage Stones</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <script>
+ gsap.registerPlugin(ScrollTrigger);
+    ScrollTrigger.config({
+      ignoreMobileResize: true
+    });
+    const canvas = document.getElementById("sequence");
+    const ctx = canvas.getContext("2d");
+    const loading = document.getElementById("loading");
+    const hotspotLayer = document.getElementById("hotspots");
+    const TOTAL = 101;
+    const images = [];
+    const loaded = [];
+    let loadedCount = 0;
+    let renderedFrame = -1;
+    let hotspotsVisible = false;
+    /* ----------------
+    Viewport Setup
+    ---------------- */
+    let viewWidth = window.innerWidth;
+    let viewHeight = window.innerHeight;
+    let dpr = window.innerWidth < 768 ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+    function updateViewport() {
+      viewWidth = window.innerWidth;
+      viewHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      canvas.width = viewWidth * dpr;
+      canvas.height = viewHeight * dpr;
+      canvas.style.width = viewWidth + "px";
+      canvas.style.height = viewHeight + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+     updateViewport();
+    /* ----------------
+    Image Path Builder
+    ---------------- */
+    function frameURL(i) {
+      return "./ezgif-frame-" + String(i).padStart(3, "0") + ".png";
+    }
+    /* ----------------
+    Image Preloader
+    ---------------- */
+    function updateLoading() {
+      const percent = Math.round((loadedCount / TOTAL) * 100);
+      loading.textContent = "Loading " + percent + "%";
+      if (loadedCount === TOTAL) {
+        loading.classList.add("hide");
+      }
+    }
+    // Unified preloader that handles index assignments safely and reliably across all devices
+    function preloadImages() {
+      for (let i = 1; i <= TOTAL; i++) {
+        const img = new Image();
+        img.onload = function () {
+          loaded[i - 1] = true;
+          loadedCount++;
+          updateLoading();
+          
+          // Draw the first frame immediately once loaded
+          if (i === 1) {
+            drawFrame(0);
+          }
+        };
+        img.onerror = function () {
+          console.warn("Missing:", frameURL(i));
+          loaded[i - 1] = false;
+          loadedCount++;
+          updateLoading();
+        };
+        img.src = frameURL(i);
+        images[i - 1] = img;
+      }
+    }
+preloadImages();
+    /* ----------------
+    Find nearest loaded frame
+    ---------------- */
+    function nearestFrame(index) {
+      if (loaded[index]) return index;
+      // Search backwards first
+      for (let i = index; i >= 0; i--) {
+        if (loaded[i]) return i;
+      }
+      // Then search forwards
+      for (let i = index; i < TOTAL; i++) {
+        if (loaded[i]) return i;
+      }
+      return -1;
+    }
+    /* ----------------
+    Draw Frame to Canvas
+    ---------------- */
+    function drawFrame(frame) {
+      frame = Math.round(frame);
+      frame = Math.max(0, Math.min(frame, TOTAL - 1));
+      const index = nearestFrame(frame);
+      if (index === -1) return;
+      const img = images[index];
+      if (!img || !img.complete) return;
+      ctx.clearRect(0, 0, viewWidth, viewHeight);
+      // COVER logic to scale correctly on all screen ratios
+      const scale = Math.max(
+        viewWidth / img.naturalWidth,
+        viewHeight / img.naturalHeight
+      );
+     const drawWidth = img.naturalWidth * scale;
+      const drawHeight = img.naturalHeight * scale;
+      const offsetY = window.innerWidth < 768 ? 40 : 20;
+      const drawX = (viewWidth - drawWidth) / 2;
+      const drawY = ((viewHeight - drawHeight) / 2) + offsetY;
+      ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+      renderedFrame = index;
+      // Handle Hotspots visibility on last frame
+      if (frame === TOTAL - 1) {
+        showHotspots();
+      } else {
+        hideHotspots();
+      }
+    }
+    /* ----------------
+    Animation State
+    ---------------- */
+    const state = {
+      frame: 0
+    };
+      /* ----------------
+    Hotspots Animations
+    ---------------- */
+    function showHotspots() {
+      if (hotspotsVisible) return;
+      hotspotsVisible = true;
+      hotspotLayer.style.visibility = "visible";
+      hotspotLayer.style.opacity = "1";
+      const items = document.querySelectorAll(".hotspot");
+      items.forEach((item, index) => {
+        const line = item.querySelector(".line");
+        const circle = item.querySelector(".circle");
+        const text = item.children[2];
+        gsap.set(item, { opacity: 1 });
+        gsap.fromTo(line, 
+          { scaleX: 0 }, 
+          { scaleX: 1, duration: 0.45, ease: "power2.out", delay: index * 0.15 }
+        );
+        gsap.fromTo(circle, 
+          { scale: 0 }, 
+          { scale: 1, duration: 0.18, ease: "back.out(2)", delay: 0.4 + (index * 0.15) }
+        );
+        gsap.fromTo(text, 
+          { opacity: 0, x: -12 }, 
+          { opacity: 1, x: 0, duration: 0.3, ease: "power2.out", delay: 0.55 + (index * 0.15) }
+        );
+      });
+    }
+ function hideHotspots() {
+      if (!hotspotsVisible) return;
+      hotspotsVisible = false;
+      gsap.killTweensOf(".hotspot");
+      gsap.killTweensOf(".line");
+      gsap.killTweensOf(".circle");
+      gsap.killTweensOf(".hotspot div:last-child");
+      gsap.set(".hotspot", { opacity: 0 });
+      gsap.set(".line", { scaleX: 0 });
+      gsap.set(".circle", { scale: 0 });
+      gsap.set(".hotspot div:last-child", { opacity: 0, x: -12 });
+      hotspotLayer.style.opacity = "0";
+      hotspotLayer.style.visibility = "hidden";
+    }
+    /* ----------------
+    GSAP Scroll Animation
+    ---------------- */
+    gsap.to(state, {
+      frame: TOTAL - 1,
+      ease: "none",
+     // FIX: Removed `snap: { frame: 1 }` from here. Tween snap fights ScrollTrigger scrub 
+      // interpolation, creating major lag and stutters. Rounding is already handled inside 
+      // the `onUpdate` draw cycle.
+      
+      onUpdate: function () {
+        let frame = Math.round(state.frame);
+        if (frame !== renderedFrame) {
+          drawFrame(frame);
+        }
+      },
+      scrollTrigger: {
+        trigger: ".section",
+        start: "top top",
+        end: "bottom bottom",
+        scrub: 0.5,
+        
+        // FIX: Pin the element using ScrollTrigger. This is incredibly stable and bypasses 
+        // iOS Safari and Android Chrome native position:sticky bugs.
+        pin: ".sticky", 
+        
+        invalidateOnRefresh: true,
+        markers: false
+        // FIX: Removed the onUpdate loading text DOM update. Updating text content on 
+        // every single pixel of scroll triggers heavy browser layout thrashing and lag.
+      }
+    });
+    /* ----------------
+    Resize & Address Bar collapsing ignore logic
+    ---------------- */
+    let resizeTimer;
+    let lastWidth = window.innerWidth;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        // FIX: Ignore vertical-only resizing (e.g. mobile address bar hiding/showing).
+        // This avoids resetting ScrollTrigger and reflowing on every tiny touch scroll.
+        if (window.innerWidth === lastWidth) return;
+        lastWidth = window.innerWidth;
+         dpr = window.innerWidth < 768 ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+        updateViewport();
+        drawFrame(state.frame);
+        ScrollTrigger.refresh();
+      }, 150);
+    });
     /* ----------------
     Orientation Changes
     ---------------- */
@@ -10,7 +414,7 @@
         ScrollTrigger.refresh();
       }, 300);
     });
-    /* ----------------
+     /* ----------------
     Initial Render Setup
     ---------------- */
     function init() {
@@ -41,3 +445,4 @@
   </script>
 </body>
 </html>
+
